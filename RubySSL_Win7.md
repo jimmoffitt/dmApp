@@ -1,9 +1,9 @@
 ###Secure Socket Layer (SSL) Support
 
-After initial prototyping of the download process on MacOS, I immediately hit a problem with https downloading on Windows. I quickly learned that there is a fundamental issue with the standard Ruby Windows install and it knowing where to look for SSL certificate files.
+After initial prototyping of the download process on MacOS, a problem was immediately hit with https downloading on Windows. It was quickly learned that there is a fundamental issue with the standard Ruby Windows install and it knowing where to look for SSL certificate files.
 [Show native error that is thrown]
 
- Luckily there are many discussion threads and workaround recipes around this issue, including gems (such as this one) dedicated to solving the problem.   
+Luckily there are many discussion threads and workaround recipes around this issue, including gems (such as this one) dedicated to solving the problem.   
 
 Since a general goal was to reduce the number of dependencies for this prototype, a decision was made to look in the local directory for a certificate file, and to pull one down from a trusted source and create the file if needed.  
 
