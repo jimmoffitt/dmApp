@@ -7,21 +7,23 @@ After initial prototyping of the download process on MacOS, I immediately hit a 
 
 Since a general goal was to reduce the number of dependencies for this prototype, a decision was made to look in the local directory for a certificate file, and to pull one down from a trusted source and create the file if needed.  
 
-
-[Move to github and reference it]
 The following code illustrates the methods for doing that:
 
+```
 #Check OS and if Windows, set the HTTPS certificate file (see method for the sad story).
 #This call also sets @http.set_cert_file = true
 if @os == :windows
       @http.set_cert_file_location( File.dirname(__FILE__) )
 end
-
+```
 
 Windows 7 code from the HTTP pt_restful class:
 
+```
     @cert_source_uri = "http://curl.haxx.se/ca/cacert.pem"
+```
 
+```
     def set_cert_file_location(app_path)
         @set_cert_file = true
         @app_path = app_path
@@ -53,3 +55,4 @@ Windows 7 code from the HTTP pt_restful class:
             }
         }
     end
+```
