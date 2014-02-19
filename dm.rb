@@ -248,11 +248,16 @@ class Dm
             if @url_list.has_key?(f)
                 @url_list.delete(f)
                 files_downloaded = files_downloaded + 1
+            elsif @url_list.has_key?("#{f}.gz") then
+                @url_list.delete("#{f}.gz")
+                files_downloaded = files_downloaded + 1
+            elsif @urllist.has_key?("#{f.split('.')[0]}.json.gz") then
+                @url_list.delete("#{f.split('.')[0]}.json.gz")
+                files_downloaded = files_downloaded + 1
             end
         end
 
         @files_got = files_downloaded
-
     end
 
     def get_data
