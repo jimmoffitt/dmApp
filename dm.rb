@@ -251,7 +251,7 @@ class Dm
             elsif @url_list.has_key?("#{f}.gz") then
                 @url_list.delete("#{f}.gz")
                 files_downloaded = files_downloaded + 1
-            elsif @urllist.has_key?("#{f.split('.')[0]}.json.gz") then
+            elsif @url_list.has_key?("#{f.split('.')[0]}.json.gz") then
                 @url_list.delete("#{f.split('.')[0]}.json.gz")
                 files_downloaded = files_downloaded + 1
             end
