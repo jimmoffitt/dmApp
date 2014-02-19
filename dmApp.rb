@@ -48,10 +48,7 @@ if __FILE__ == $0  #This script code is executed when running this file.
     oDM.get_config #Load settings.
 
     # These are not in DMConfig, not persisted.
-    oDM.status = TkVariable.new
     oDM.progress_text = TkVariable.new
-    oDM.status.value = "Starting up..."
-
 
     #Start building user interface.
     root = TkRoot.new {title "Gnip Historical PowerTrack Download Manager"}

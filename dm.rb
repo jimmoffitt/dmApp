@@ -15,7 +15,6 @@ class Dm
     attr_accessor :config, :http,
                   #Transient values managed during execution.
                   :link_list, :files_total, :files_to_get, :file_got, #@files_total = @files_to_get + @files_got
-                  :status, :progress_text,
                   :os
 
     def initialize()
@@ -32,7 +31,7 @@ class Dm
         @http.publisher = @config.publisher
         @http.user_name = @config.user_name unless @config.user_name.nil? #Set the info needed for authentication.
         @http.password = @config.password unless @config.password.nil?  #HTTP class can decrypt password if you set password_encrypted.
-        @http.url=@http.getHistoricalDataURL(@config.account_name, @config.job_uuid) unless @config.account_name.nil?  #Pass the URL to the HTTP object.
+        @http.url=@http.get_historical_data_url(@config.account_name, @config.job_uuid) unless @config.account_name.nil?  #Pass the URL to the HTTP object.
 
         #Check OS and if Windows, set the HTTPS certificate file (see method for the sad story).
         #This call also sets @http.set_cert_file = true
@@ -107,48 +106,6 @@ class Dm
         end
     end
 
-    def download_multithread()
-        #Since there could be thousands of files to fetch, let's throttle the downloading.
-        #Let's process a slice at a time, then multiple-thread the downloading of that slice.
-        slice_size = 10
-        thread_limit = 10
-        sleep_seconds = 1
-
-        threads = []
-
-        begin_time = Time.now
-
-        @url_list.each_slice(slice_size) do |these_items|
-            for item in these_items
-
-                p item[1]
-
-                threads << Thread.new(item[1]) do |url|
-
-                    until threads.map { |t| t.status }.count("run") < thread_limit do
-                        print "."
-                        sleep sleep_seconds
-                    end
-
-                    File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
-                        @http.url = url
-                        response = @http.GET(true)  #These HPT urls are elf-authenticating...
-                        new_file.write(response.body)
-                    end
-
-                end
-                threads.each { |thr| thr.join}
-            end
-        end
-
-        p "Took #{Time.now - begin_time} seconds to download files.  "
-
-        if @config.uncompress_data == true or @config.uncompress_data == "1" then
-            uncompress_data
-        end
-    end
-
-
 
     #-------------------------------------------------------------------------------------------------------------------
     #Downloading based on open-uri
@@ -159,8 +116,6 @@ class Dm
         begin_time = Time.now
 
         @url_list.each do |item|
-
-            @status.value = "Downloading #{item[0]}..."
 
             p "Downloading #{item[0]}..."
 
@@ -186,8 +141,6 @@ class Dm
         end
 
         p "Took #{Time.now - begin_time} seconds to download files.  "
-
-        @status.value = "done"
     end
 
     def download_multithread_openuri()
@@ -230,8 +183,6 @@ class Dm
         end
 
         p "Took #{Time.now - begin_time} seconds to download files.  "
-
-        @status.value = "done"
     end
 
 
@@ -275,15 +226,15 @@ class Dm
 
 
     def get_filelist
-        @status.value = "Getting data file list for job #{@config.job_uuid}..."
+        p "Getting data file list for job #{@config.job_uuid}..."
 
         response = @http.GET()
         data_url_json = response.body
         @url_list = parse_url_list(data_url_json)
         @files_total = @url_list.length
 
-        @status.value = "Got data file list for job #{@config.job_uuid}..."
-        @progress_text =  "This Historical PowerTrack job has #{@files_total} data files "
+        p "Got data file list for job #{@config.job_uuid}..."
+        p "This Historical PowerTrack job has #{@files_total} data files "
     end
 
     '''
@@ -312,16 +263,12 @@ class Dm
         #Filter out any files that have already been downloaded!
         look_before_leap
 
-        @status.value = "Starting downloads..."
+        p "Starting downloads..."
 
         if not @url_list.nil? then
-            @status.value = "Downloading data..."
-            download_multithread
-            #download
-            #download_openuri
-            #download_multithread_openuri
+            download
         else
-            @status.value = "All file already downloaded!"
+            p "All file already downloaded!"
         end
     end
 end

@@ -1,20 +1,6 @@
 #=======================================================================================================================
-# A simple RESTful HTTP class put together to be a "common" class.
+# A simple RESTful HTTP class.
 # Knows a bunch about HTTP, and a little about the PowerTrack family of products.
-#
-# This code evolved as it toured several PowerTrack products:
-# Historical
-# Rehydration.
-# TODO: Search
-#
-# To be common to all PowerTrack ruby (RESTful) clients: Historical, Rehydration, Search.
-# Stateless.
-# A RESTful set of HTTP methods.
-#
-#Current PowerTrack products this object works with:
-#  * Historical
-#  * Rehydration
-#  * Search
 #
 #NOTES
 #Based on Ruby 1.92. which has an issue with HTTPS commands on Windows.
@@ -24,9 +10,7 @@ class DmHttp
 
     require "net/https"     #HTTP gem.
     require "uri"
-
     require "base64" #Used for password encryption, may not be needed (?)
-
 
     #Object attributes.
     attr_accessor :product,
@@ -44,11 +28,6 @@ class DmHttp
                   :set_cert_file,  #Set SSL certificate file on Windows.
                   :app_path #Needed on Windows for finding SSL certificate file.
                   :cert_source_uri #Like http://curl.haxx.se/ca/cacert.pem
-
-    # oHTTP = PtRESTful.new
-    #   url="https://historical.gnip.com
-    #   user_name = jim
-    #   password = *********
 
     def initialize(url=nil, user_name=nil, password=nil, headers=nil)
 
@@ -71,8 +50,6 @@ class DmHttp
         end
     end
 
-
-
     #Attributes.
     def url=(value)
         @url = value
@@ -88,21 +65,8 @@ class DmHttp
         @password = value
     end
 
-
     #Helper functions for building URLs
-    '''
-    If @account_name has been set, then it is used to generate URL. Or you can pass it in.
-    Same for job_uuid for Histortical Data URL generation.
-    '''
-    #TODO: getURL(product,account)
-    #TODO: getURL(product,account,data_set)
-    #TODO: getSearchURL(account)
-    #Needs
-
-
-
-
-    def getHistoricalURL(account_name=nil)
+    def get_historical_url(account_name=nil)
         @url = "https://historical.gnip.com:443/accounts/" #Root url for Historical PowerTrack API.
 
         if account_name.nil? then #using object account_name attribute.
@@ -121,8 +85,7 @@ class DmHttp
     URL has this form:
        https://historical.gnip.com:443/accounts/<account>/publishers/twitter/historical/track/jobs/<job_uuid>/results.json
     '''
-
-    def getHistoricalDataURL(account_name=nil, job_uuid=nil)
+    def get_historical_data_url(account_name=nil, job_uuid=nil)
 
         @url = "https://historical.gnip.com:443/accounts/" #Root url for Historical PowerTrack API.
 
@@ -149,29 +112,6 @@ class DmHttp
             @url = @url + "/publishers/twitter/historical/track/jobs/#{job_uuid}/results.json"
         end
     end
-
-    def getRehydrationURL(account_name=nil)
-        @url = "https://rehydration.gnip.com:443/accounts/"  #Root url for Rehydration PowerTrack.
-
-        if account_name.nil? then #using object account_name attribute.
-            if @account_name.nil?
-                p "No account name set.  Can not set url."
-            else
-                @url = @url + @account_name + "/publishers/" + @publisher + "/rehydration/activities.json"
-            end
-        else #account_name passed in, so use that...
-            @url = @url + account_name + "/publishers/" + @publisher + "/rehydration/activities.json"
-        end
-    end
-
-
-
-
-
-
-
-
-
 
     #Ruby file HTTPS i/o on Windows.
     #
@@ -220,11 +160,6 @@ class DmHttp
     end
 
 
-
-
-
-
-
     #Fundamental REST API methods:
     def POST(data=nil)
 
@@ -266,36 +201,21 @@ class DmHttp
         return response
     end
 
-    def GETX()
+    def GET(url_self_auth=nil)  #Some urls will have authentication embedded in them.
         uri = URI(@url)
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
+
         if @set_cert_file
             http = set_cert_file(http)
         end
+
         request = Net::HTTP::Get.new(uri.request_uri)
 
-        response = http.request(request)
-        return response
-    end
-
-    def GET(params=nil)
-        uri = URI(@url)
-
-        #params are passed in as a hash.
-        #Example: params["max"] = 100, params["since_date"] = 20130321000000
-        if not params.nil?
-            uri.query = URI.encode_www_form(params)
+        if url_self_auth != true then
+            request.basic_auth(@user_name, @password)
         end
-
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        if @set_cert_file
-            http = set_cert_file(http)
-        end
-        request = Net::HTTP::Get.new(uri.request_uri)
-        request.basic_auth(@user_name, @password)
 
         response = http.request(request)
         return response
@@ -319,5 +239,5 @@ class DmHttp
         response = http.request(request)
         return response
     end
-end #PtREST class.
+end #DmHttp class.
 
