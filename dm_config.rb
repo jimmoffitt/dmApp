@@ -39,9 +39,8 @@ class DMConfig
         config.password=Base64.encode64(@password.value)
         config.data_dir=@data_dir.value
         config.job_info=@job_info.value
+        config.uncompress_data = @uncompress_data.value
         set_uuid
-
-        config.uncompress_data=1
 
         #write to file
         File.open("dm_config", "wb") do |f|
@@ -66,6 +65,7 @@ class DMConfig
                 @password.value = Base64.decode64(config.password) unless config.password.nil?
                 @data_dir.value = config.data_dir
                 @job_info.value  = config.job_info
+                @uncompress_data.value = config.uncompress_data
                 set_uuid
 
             rescue
