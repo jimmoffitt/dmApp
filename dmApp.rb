@@ -46,13 +46,14 @@ if __FILE__ == $0  #This script code is executed when running this file.
     oDM.config.job_info = TkVariable.new
     oDM.config.job_uuid = TkVariable.new
     oDM.config.data_dir = TkVariable.new
+    oDM.config.uncompress_data = TkVariable.new
     oDM.get_config #Load settings.
 
     # These are not in DMConfig, not persisted.
     oDM.status = TkVariable.new
     oDM.progress_text = TkVariable.new
     oDM.status.value = "Starting up..."
-    $uncompress_data = TkVariable.new
+
 
     #Start building user interface.
     root = TkRoot.new {title "Gnip Historical PowerTrack Download Manager"}
@@ -90,7 +91,7 @@ if __FILE__ == $0  #This script code is executed when running this file.
 
     current_row = current_row + 1
     #Uncompress data?
-    Tk::Tile::CheckButton.new(content) {text 'Uncompress data files'; variable oDM.config.uncompress_data; set_value "1"}.grid( :column => 1, :row => current_row, :sticky => 'w')
+    Tk::Tile::CheckButton.new(content) {text 'Uncompress data files'; variable oDM.config.uncompress_data; set_value oDM.config.uncompress_data.to_s}.grid( :column => 1, :row => current_row, :sticky => 'w')
 
     #---------------------------------------------
     current_row = current_row + 1
