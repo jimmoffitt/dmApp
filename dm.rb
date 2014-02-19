@@ -3,7 +3,7 @@ require 'json'
 require 'zlib' 
 
 #Common Gnip classes.
-require_relative './pt_restful'
+require_relative './dm_http'
 require_relative './dm_config'
 
 class Dm
@@ -19,7 +19,7 @@ class Dm
 
     def initialize()
         @config = DMConfig.new    #Helper object to hold and manage app settings.
-        @http = PtRestful.new     #Set up a HTTP object. Historical API is REST based (currently).
+        @http = DmHttp.new     #Set up a HTTP object. Historical API is REST based (currently).
         os                        #Determine what OS we are on.
     end
 
