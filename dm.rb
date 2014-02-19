@@ -1,6 +1,7 @@
 #Application gems.
 require 'json' 
 require 'zlib' 
+require 'thread'
 
 #Common Gnip classes.
 require_relative './dm_http'
@@ -65,19 +66,131 @@ class Dm
     '''
     def uncompress_data
 
-        Dir.glob(@config.data_dir + "/*.gz") do |file_name|
-            Zlib::GzipReader.open(file_name) { |gz|
-                new_name = File.dirname(file_name) + "/" + File.basename(file_name, ".*")
-                g = File.new(new_name, "w")
-                g.write(gz.read)
-                g.close
-            }
+        begin
+            Dir.glob(@config.data_dir + "/*.gz") do |file_name|
+                Zlib::GzipReader.open(file_name) { |gz|
+                    new_name = File.dirname(file_name) + "/" + File.basename(file_name, ".*")
+                    g = File.new(new_name, "w")
+                    g.write(gz.read)
+                    g.close
+                }
 
-            File.delete(file_name)
+                File.delete(file_name)
+            end
+        rescue => e
+            p "Error msg: #{e.message} || Backtrace: #{e.backtrace}"
         end
     end
 
-    def downloadFiles()
+    #-------------------------------------------------------------------------------------------------------------------
+    #Downloading based on dm_http.
+
+    def download
+
+        begin_time = Time.now
+
+        @url_list.each do |item|
+
+            p "Downloading #{item[0]}..."
+
+            File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
+                @http.url = item[1]
+                response = @http.GET(true)  #These HPT urls are elf-authenticating...
+                new_file.write(response.body)
+            end
+        end
+
+        p "Took #{Time.now - begin_time} seconds to download files.  "
+
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
+        end
+    end
+
+    def download_multithread()
+        #Since there could be thousands of files to fetch, let's throttle the downloading.
+        #Let's process a slice at a time, then multiple-thread the downloading of that slice.
+        slice_size = 10
+        thread_limit = 10
+        sleep_seconds = 1
+
+        threads = []
+
+        begin_time = Time.now
+
+        @url_list.each_slice(slice_size) do |these_items|
+            for item in these_items
+
+                p item[1]
+
+                threads << Thread.new(item[1]) do |url|
+
+                    until threads.map { |t| t.status }.count("run") < thread_limit do
+                        print "."
+                        sleep sleep_seconds
+                    end
+
+                    File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
+                        @http.url = url
+                        response = @http.GET(true)  #These HPT urls are elf-authenticating...
+                        new_file.write(response.body)
+                    end
+
+                end
+                threads.each { |thr| thr.join}
+            end
+        end
+
+        p "Took #{Time.now - begin_time} seconds to download files.  "
+
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
+        end
+    end
+
+
+
+    #-------------------------------------------------------------------------------------------------------------------
+    #Downloading based on open-uri
+    def download_openuri()
+        #Since there could be thousands of files to fetch, let's throttle the downloading.
+        #Let's process a slice at a time, then multiple-thread the downloading of that slice.
+
+        begin_time = Time.now
+
+        @url_list.each do |item|
+
+            @status.value = "Downloading #{item[0]}..."
+
+            p "Downloading #{item[0]}..."
+
+            File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
+                # the following "open" is provided by open-uri
+
+                #if Windows, switch to HTTP from HTTPS
+                url = item[1]
+
+                #if @os == :windows then
+                #    url.gsub!("https", "http")
+                #end
+
+                open(url, 'rb') do |read_file|
+                    new_file.write(read_file.read)
+                end
+            end
+
+        end
+
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
+        end
+
+        p "Took #{Time.now - begin_time} seconds to download files.  "
+
+        @status.value = "done"
+    end
+
+    def download_multithread_openuri()
         #Since there could be thousands of files to fetch, let's throttle the downloading.
         #Let's process a slice at a time, then multiple-thread the downloading of that slice.
         slice_size = 10
@@ -121,67 +234,6 @@ class Dm
         @status.value = "done"
     end
 
-    def download_files
-
-        begin_time = Time.now
-
-        @url_list.each do |item|
-
-            p "Downloading #{item[0]}..."
-
-            File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
-                @http.url = item[1]
-                response = @http.GETX()
-                new_file.write(response.body)
-            end
-        end
-
-        if @config.uncompress_data == true or @config.uncompress_data == "1" then
-            uncompress_data
-        end
-
-        p "Took #{Time.now - begin_time} seconds to download files.  "
-
-    end
-
-
-    def downloadFilesSingleThread()
-        #Since there could be thousands of files to fetch, let's throttle the downloading.
-        #Let's process a slice at a time, then multiple-thread the downloading of that slice.
-
-        begin_time = Time.now
-
-        @url_list.each do |item|
-
-            @status.value = "Downloading #{item[0]}..."
-
-            p "Downloading #{item[0]}..."
-
-            File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
-                # the following "open" is provided by open-uri
-
-                #if Windows, switch to HTTP from HTTPS
-                url = item[1]
-
-                #if @os == :windows then
-                #    url.gsub!("https", "http")
-                #end
-
-                open(url, 'rb') do |read_file|
-                    new_file.write(read_file.read)
-                end
-            end
-
-        end
-
-        if @config.uncompress_data == true or @config.uncompress_data == "1" then
-            uncompress_data
-        end
-
-        p "Took #{Time.now - begin_time} seconds to download files.  "
-
-        @status.value = "done"
-    end
 
     '''
     The *.json payload has this form:
@@ -264,9 +316,10 @@ class Dm
 
         if not @url_list.nil? then
             @status.value = "Downloading data..."
-            #downloadFilesSingleThread
-            #downloadFiles
-            download_files
+            download_multithread
+            #download
+            #download_openuri
+            #download_multithread_openuri
         else
             @status.value = "All file already downloaded!"
         end
