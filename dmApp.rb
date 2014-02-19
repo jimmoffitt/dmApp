@@ -3,8 +3,6 @@ require 'json' #Needed at a higher level, for any data transferring/storing.
 require 'zlib' #Needs to live in File Manager class.
 require 'thread'
 #Common classes.
-require_relative "./pt_restful"
-
 require_relative "./dm"
 
 #App UI code.  Based on Tk.  Requires a download manager object (oDM)
