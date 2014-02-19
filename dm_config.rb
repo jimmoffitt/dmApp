@@ -1,10 +1,7 @@
-
-#OK, the crazy thing here is that these Application attributes are TkVariables.
-#This class is tied to the Download Manager Application UI...
+require 'base64'
+require 'fileutils'
 
 class DMConfig
-
-    require 'base64'
 
     CONFIG_FILE = "dm_config"  #App-specific.  A config file we create and manage, stores our UI configuration...
 
@@ -19,6 +16,15 @@ class DMConfig
         @publisher = "twitter"
         @product = "historical"
         @stream_type = "track"
+    end
+
+    #Confirm a directory exists, creating it if necessary.
+    def check_directory(directory)
+        #Make sure directory exists, making it if needed.
+        if not File.directory?(directory) then
+            FileUtils.mkpath(directory) #logging and user notification.
+        end
+        directory
     end
 
     def set_uuid
@@ -63,7 +69,7 @@ class DMConfig
                 @account_name.value = config.account_name
                 @user_name.value = config.user_name
                 @password.value = Base64.decode64(config.password) unless config.password.nil?
-                @data_dir.value = config.data_dir
+                @data_dir.value = check_directory(config.data_dir)
                 @job_info.value  = config.job_info
                 @uncompress_data.value = config.uncompress_data
                 set_uuid
