@@ -63,9 +63,9 @@ class Dm
     A simple wrapper to the gunzip command.  Provides a simplistic mechanism for uncompressing gz files on Linux or
     Mac OS.  For Windows developers, this should be replaced with more appropriate code.
     '''
-    def uncompressData
+    def uncompress_data
 
-        Dir.glob(@config.output_folder + "/*.gz") do |file_name|
+        Dir.glob(@config.data_dir + "/*.gz") do |file_name|
             Zlib::GzipReader.open(file_name) { |gz|
                 new_name = File.dirname(file_name) + "/" + File.basename(file_name, ".*")
                 g = File.new(new_name, "w")
@@ -91,10 +91,6 @@ class Dm
         @url_list.each_slice(slice_size) do |these_items|
             for item in these_items
 
-                #@status.value = "Downloading #{item[0]}..."
-
-                #p "Downloading #{item[0]}..."
-
                 threads << Thread.new(item[1]) do |url|
 
                     until threads.map { |t| t.status }.count("run") < thread_limit do
@@ -116,18 +112,44 @@ class Dm
             end
         end
 
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
+        end
+
         p "Took #{Time.now - begin_time} seconds to download files.  "
 
         @status.value = "done"
     end
+
+    def download_files
+
+        begin_time = Time.now
+
+        @url_list.each do |item|
+
+            p "Downloading #{item[0]}..."
+
+            File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
+                @http.url = item[1]
+                response = @http.GETX()
+                new_file.write(response.body)
+            end
+        end
+
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
+        end
+
+        p "Took #{Time.now - begin_time} seconds to download files.  "
+
+    end
+
 
     def downloadFilesSingleThread()
         #Since there could be thousands of files to fetch, let's throttle the downloading.
         #Let's process a slice at a time, then multiple-thread the downloading of that slice.
 
         begin_time = Time.now
-
-
 
         @url_list.each do |item|
 
@@ -141,14 +163,19 @@ class Dm
                 #if Windows, switch to HTTP from HTTPS
                 url = item[1]
 
-                if @os == :windows then
-                    url.gsub!("https", "http")
-                end
+                #if @os == :windows then
+                #    url.gsub!("https", "http")
+                #end
 
                 open(url, 'rb') do |read_file|
                     new_file.write(read_file.read)
                 end
             end
+
+        end
+
+        if @config.uncompress_data == true or @config.uncompress_data == "1" then
+            uncompress_data
         end
 
         p "Took #{Time.now - begin_time} seconds to download files.  "
@@ -205,9 +232,7 @@ class Dm
 
         @status.value = "Got data file list for job #{@config.job_uuid}..."
         @progress_text =  "This Historical PowerTrack job has #{@files_total} data files "
-
     end
-
 
     '''
     Look in the output folder, and make sure not to download any files already there.
@@ -237,11 +262,11 @@ class Dm
 
         @status.value = "Starting downloads..."
 
-
         if not @url_list.nil? then
             @status.value = "Downloading data..."
-            downloadFilesSingleThread
+            #downloadFilesSingleThread
             #downloadFiles
+            download_files
         else
             @status.value = "All file already downloaded!"
         end
