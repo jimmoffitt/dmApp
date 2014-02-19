@@ -47,9 +47,6 @@ if __FILE__ == $0  #This script code is executed when running this file.
     oDM.config.uncompress_data = TkVariable.new
     oDM.get_config #Load settings.
 
-    # These are not in DMConfig, not persisted.
-    oDM.progress_text = TkVariable.new
-
     #Start building user interface.
     root = TkRoot.new {title "Gnip Historical PowerTrack Download Manager"}
     content = Tk::Tile::Frame.new(root) {padding "3 3 12 12"}
