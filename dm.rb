@@ -11,13 +11,15 @@ class Dm
     require 'rbconfig'
     require 'open-uri'  
 
-    #Helper objects: HTTP, Config
-    attr_accessor :config, :http,
+
+    attr_accessor :config, :http,  #Helper objects: HTTP, Config
                   #Transient values managed during execution.
-                  :link_list, :files_total, :files_to_get, :file_got, #@files_total = @files_to_get + @files_got
+                  :go,
+                  :link_list, :files_total, :files_to_get, :files_local, #@files_total = @files_to_get + @files_local
                   :os
 
     def initialize()
+        @go = false
         @config = DMConfig.new    #Helper object to hold and manage app settings.
         @http = DmHttp.new     #Set up a HTTP object. Historical API is REST based (currently).
         os                        #Determine what OS we are on.
@@ -41,6 +43,8 @@ class Dm
 
     end
 
+
+    #--> Common resource.
     def os
         @os ||= (
         host_os = RbConfig::CONFIG['host_os']
@@ -70,6 +74,7 @@ class Dm
                 Zlib::GzipReader.open(file_name) { |gz|
                     new_name = File.dirname(file_name) + "/" + File.basename(file_name, ".*")
                     g = File.new(new_name, "w")
+                    p "Decompressing #{new_name}"
                     g.write(gz.read)
                     g.close
                 }
@@ -90,13 +95,18 @@ class Dm
 
         @url_list.each do |item|
 
-            p "Downloading #{item[0]}..."
+            #p "Downloading #{item[0]}..."
 
             File.open(@config.data_dir + "/" + item[0], "wb") do |new_file|
                 @http.url = item[1]
                 response = @http.GET(true)  #These HPT urls are elf-authenticating...
                 new_file.write(response.body)
             end
+
+            @files_local = @files_local + 1
+
+            #p "Local files: #{@files_local}"
+
         end
 
         p "Took #{Time.now - begin_time} seconds to download files.  "
@@ -124,10 +134,6 @@ class Dm
 
                 #if Windows, switch to HTTP from HTTPS
                 url = item[1]
-
-                #if @os == :windows then
-                #    url.gsub!("https", "http")
-                #end
 
                 open(url, 'rb') do |read_file|
                     new_file.write(read_file.read)
@@ -230,11 +236,17 @@ class Dm
 
         response = @http.GET()
         data_url_json = response.body
-        @url_list = parse_url_list(data_url_json)
-        @files_total = @url_list.length
 
-        p "Got data file list for job #{@config.job_uuid}..."
-        p "This Historical PowerTrack job has #{@files_total} data files "
+        if response.body.include?('expired') then
+            p 'JOB HAS EXPIRED'
+        elsif response.body.include?('error') then
+            p "ERROR: #{response.body}"
+        else
+            @url_list = parse_url_list(data_url_json)
+            @files_total = @url_list.length
+        end
+
+        p "Historical PowerTrack job #{@config.job_uuid} has #{@files_total} data files "
     end
 
     '''
@@ -257,23 +269,34 @@ class Dm
             end
         end
 
-        @files_got = files_downloaded
+        @files_local = files_downloaded
+
+        p 'Have #{@files_local} files already...'
+
     end
 
     def get_data
 
-        #go get the file list from Gnip server.
-        get_filelist
+        while true
+            if @go then
 
-        #Filter out any files that have already been downloaded!
-        look_before_leap
+                #go get the file list from Gnip server.
+                get_filelist
 
-        p "Starting downloads..."
+                #Filter out any files that have already been downloaded!
+                look_before_leap
 
-        if not @url_list.nil? then
-            download
-        else
-            p "All file already downloaded!"
+                p "Starting downloads..."
+
+                if not @url_list.nil? then
+                    download
+                else
+                    p "All file already downloaded!"
+                end
+            else
+               p 'Not enabled'
+               sleep 1
+            end
         end
     end
 end
