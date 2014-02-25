@@ -1,9 +1,12 @@
 ###Secure Socket Layer (SSL) Support
 
-After initial prototyping of the download process on MacOS, a problem was immediately hit with https downloading on Windows. It was quickly learned that there is a fundamental issue with the standard Ruby Windows install and it knowing where to look for SSL certificate files.
-[Show native error that is thrown]
+After initial prototyping of the download process on Mac OS, a problem was immediately hit with https downloading on Windows. It was quickly learned that there is a fundamental issue with the standard Ruby Windows install and it knowing where to look for SSL certificate files. Out-of-the-box attempts result in this error: 
 
-In some cases, perhaps the best option is to rely on http transfers without SSL.
+```
+OpenSSL::SSL::SSLError: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed
+```
+
+In some cases, you might be able to ignore this issue and implement the easiest option of avoiding HTTP/SSL transfers completely:
 
      if @os == :windows then
           url.gsub!("https", "http")
@@ -43,7 +46,6 @@ Windows 7 code from the HTTP dm_http class:
 
         cert_file = File.join(@app_path, "cacert.pem")
 
-        
         if not File.exist?(cert_file) #If cert file is not found, create one.
             make_ssl_cert_file(cert_file)
         end
