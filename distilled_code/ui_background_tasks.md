@@ -1,8 +1,8 @@
  
 The <b> *dmApp* </b> application is segregated into two main files:
  
-+ *dmApp.rb*: Tk code that provides a wrapper around the dm class. 
 + *dm.rb*: headless 'worker' class that encapsulates the downloading process. Knows nothing about how the UI is implemented.  
++ *dmApp.rb*: Tk code that provides a wrapper around the *dm* class. Loads a *dm.get_data* method as a thread, and manipulates *dm* state attributes @go and @exit. 
 
 The code below distills how the these two files interact. *dmApp* creates an instance of the *dm* class.  The *dm* class has a *get_data* method which is added as a threaded process. A second thread hosts the Tk.mainloop (Tk's event thread). *dmApp* also uses a timer that queries the *dm* object about its download status for updaing the user-interface.
 
