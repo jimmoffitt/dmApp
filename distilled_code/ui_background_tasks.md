@@ -1,10 +1,12 @@
- threads << Thread.new {
-        Tk.mainloop   #Error --> Tk.mainloop is allowed on the main thread only
-    }
+ 
+The <b> *dmApp* </b> application is segregated into two main files:
+ 
++ *dmApp.rb*: Tk code that provides a wrapper around the dm class. 
++ *dm.rb*: headless 'worker' class that encapsulates the downloading process. Knows nothing about how the UI is implemented.  
 
+The code below distills how the these two files interact. *dmApp* creates an instance of the *dm* class.  The *dm* class has a *get_data* method which is added as a threaded process. A second thread hosts the Tk.mainloop (Tk's event thread). *dmApp* also uses a timer that queries the *dm* object about its download status for updaing the user-interface.
 
-
-
+*dmApp* also manipulates two *dm* state attributes (@go and @exit). A "download data" button binds to the @go attribute, while an 'exit' button to the @exit attribute.  Note that a real-world application should have a mechanism to 'pause' a download cycle, but that is not implemented in this prototype.
 
 ```   
     oDM = Dm.new()
@@ -30,8 +32,15 @@
 
     threads.each {|thread| thread.join}
 ```
+Note that an error is thrown if you attempt to thread the Tk mainloop in the following way:    
+    
+    threads << Thread.new {
+        Tk.mainloop   #Error --> Tk.mainloop is allowed on the main thread only
+    }
 
-Successfully building a OCRA executable requires a clean and graceful exit of your application. While binding a *Kernal.exit* to your application UI's exit button may not cause any run-time headaches, it will take the OCRA build process down with it. Therefore you need to gracefully end the threaded processes that you've started. For the dmApp code this meant binding the following code to the exit button.
+
+
+Successfully building an OCRA executable requires a clean and graceful exit of your application. While binding a *Kernel.exit* to your application UI's exit button may not cause any run-time headaches, it will take the OCRA build process down with it. Therefore you need to gracefully end the threaded processes that you've started. For the dmApp code this meant binding the following code to the exit button.
 
 ```
 def exit_app(oDM, t_ui)
@@ -40,6 +49,7 @@ def exit_app(oDM, t_ui)
 end
 ```
 
+*dm* object has a get_data method that is loaded as a thread in the *dmApp* code.  
 
 ```
 class Dm
