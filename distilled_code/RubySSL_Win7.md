@@ -43,8 +43,8 @@ Windows 7 code from the HTTP dm_http class:
 
         cert_file = File.join(@app_path, "cacert.pem")
 
-        #If cert file is not found, create one.
-        if not File.exist?(cert_file)
+        
+        if not File.exist?(cert_file) #If cert file is not found, create one.
             make_ssl_cert_file(cert_file)
         end
         http.ca_file = cert_file
