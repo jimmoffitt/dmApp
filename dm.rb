@@ -1,25 +1,25 @@
 #Application gems.
-require 'json' 
-require 'zlib' 
+require 'json'
+require 'zlib'
 require 'thread'
+require 'rbconfig'
+require 'open-uri'
 
 #Common Gnip classes.
 require_relative './dm_http'
 require_relative './dm_config'
 
 class Dm
-    require 'rbconfig'
-    require 'open-uri'  
-
 
     attr_accessor :config, :http,  #Helper objects: HTTP, Config
                   #Transient values managed during execution.
-                  :go,
+                  :go, :exit,
                   :link_list, :files_total, :files_to_get, :files_local, #@files_total = @files_to_get + @files_local
                   :os
 
     def initialize()
         @go = false
+        @exit = false
         @config = DMConfig.new    #Helper object to hold and manage app settings.
         @http = DmHttp.new     #Set up a HTTP object. Historical API is REST based (currently).
         os                        #Determine what OS we are on.
@@ -74,7 +74,7 @@ class Dm
                 Zlib::GzipReader.open(file_name) { |gz|
                     new_name = File.dirname(file_name) + "/" + File.basename(file_name, ".*")
                     g = File.new(new_name, "w")
-                    p "Decompressing #{new_name}"
+                    #p "Decompressing #{new_name}"
                     g.write(gz.read)
                     g.close
                 }
@@ -271,13 +271,13 @@ class Dm
 
         @files_local = files_downloaded
 
-        p 'Have #{@files_local} files already...'
+        p "Have #{@files_local} files already..."
 
     end
 
     def get_data
 
-        while true
+        while @exit == false
             if @go then
 
                 #go get the file list from Gnip server.
@@ -293,9 +293,10 @@ class Dm
                 else
                     p "All file already downloaded!"
                 end
+                @go = false
             else
-               p 'Not enabled'
-               sleep 1
+                #p 'Not enabled'
+                sleep 1
             end
         end
     end
