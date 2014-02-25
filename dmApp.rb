@@ -5,7 +5,7 @@ require 'zlib' #Needs to live in File Manager class.
 #App UI code.  Based on Tk.  Requires a download manager object (oDM)
 
 #Common classes.
-require_relative "./dm"  #Manages the downloading, knows nothing about the dmApp UI and Tk.
+require_relative './dm'  #Manages the downloading, knows nothing about the dmApp UI and Tk.
 
 
 #=======================================================================================================================
@@ -25,8 +25,9 @@ def select_data_dir(oDM)
     oDM.config.data_dir.value
 end
 
-def exit_app
-    Kernel.exit
+def exit_app(oDM, t_ui)
+    oDM.exit = true
+    t_ui.destroy
 end
 
 #-------------------------------------------------
@@ -35,6 +36,7 @@ if __FILE__ == $0  #This script code is executed when running this file.
     p "Creating Application object..."
 
     oDM = Dm.new()
+    t_ui = TkRoot.new
 
     #Create Tk variables.
     # These are encapsulated in the DMConfig object.
@@ -104,8 +106,16 @@ if __FILE__ == $0  #This script code is executed when running this file.
     #app_buttons.grid :column=>0, :row=>4, :columnspan => 6, :rowspan => 1
     current_row = current_row + 1
     Tk::Tile::Button.new(content) {text 'Save Settings'; width 12; command {oDM.config.save_config}}.grid( :column => 0, :columnspan => 1, :row => current_row, :sticky => 'w')
-    Tk::Tile::Button.new(content) {text 'Exit'; width 12; command {exit_app}}.grid( :column => 1, :columnspan => 1, :row => current_row)
-    Tk::Tile::Button.new(content) {text 'Download Data'; width 12; command {oDM.go = true }}.grid( :column => 7, :columnspan => 1, :row => current_row, :sticky => 'e')
+    Tk::Tile::Button.new(content) {text 'Exit'; width 12; command {exit_app(oDM,t_ui)}}.grid( :column => 1, :columnspan => 1, :row => current_row)
+
+    #Tweak Downlaod button depending on OS.
+    if oDM.os == :windows then
+        btn_width = 20
+    else
+        btn_width = 12
+    end
+
+    Tk::Tile::Button.new(content) {text 'Download Data'; width btn_width; command {oDM.go = true }}.grid( :column => 7, :columnspan => 1, :row => current_row, :sticky => 'e')
 
     #-----------------------------------------
     content.grid :column => 0, :row => 0, :sticky => 'nsew'
@@ -113,11 +123,10 @@ if __FILE__ == $0  #This script code is executed when running this file.
     TkGrid.columnconfigure root, 0, :weight => 1
     TkGrid.rowconfigure root, 0, :weight => 1
 
-
     tick = proc{|o|
         begin #UI event loop.
               #p "oDM.files_local = #{oDM.files_local}"
-              UI_progress_bar_download.value = (oDM.files_local.to_f/oDM.files_total.to_f) * 100
+            UI_progress_bar_download.value = (oDM.files_local.to_f/oDM.files_total.to_f) * 100
 
         end
     }
@@ -138,10 +147,10 @@ if __FILE__ == $0  #This script code is executed when running this file.
 
     threads << Thread.new {oDM.get_data}
 
-    t_ui = TkRoot.new.mainloop()
+    t_ui.mainloop
 
     threads << Thread.new {
-       t_ui
+        t_ui
         #Tk.mainloop   #Error --> Tk.mainloop is allowed on the main thread only
     }
 
