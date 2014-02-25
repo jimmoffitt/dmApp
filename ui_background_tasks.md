@@ -7,13 +7,13 @@
 ```   
     oDM = Dm.new()
 
-    tick = proc{|o|
+    timer_proc = proc{|o|
         begin #UI event loop.
                UI_progress_bar_download.value = (oDM.files_local.to_f/oDM.files_total.to_f) * 100
        end
     }
 
-    timer = TkTimer.new(500, -1, tick )
+    timer = TkTimer.new(500, -1, timer_proc )
     timer.start(0)
 
     threads = []
@@ -26,7 +26,7 @@
        t_ui
     }
 
-    threads.each {|thr| thr.join}
+    threads.each {|thread| thread.join}
 ```
 
 
