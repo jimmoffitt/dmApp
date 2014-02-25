@@ -4,6 +4,8 @@
 
 
 
+
+
 ```   
     oDM = Dm.new()
 
@@ -29,24 +31,34 @@
     threads.each {|thread| thread.join}
 ```
 
+Successfully building a OCRA executable requires a clean and graceful exit of your application. While binding a *Kernal.exit* to your application UI's exit button may not cause any run-time headaches, it will take the OCRA build process down with it. Therefore you need to gracefully end the threaded processes that you've started. For the dmApp code this meant binding the following code to the exit button.
+
+```
+def exit_app(oDM, t_ui)
+    oDM.exit = true
+    t_ui.destroy
+end
+```
+
 
 ```
 class Dm
 
     attr_accessor :http,  #Helper object that knows http.
-                  :go,  #UI gatekeeper boolean.
+                  :go,  #UI gatekeepers (booleans).
+                  :exit,
                   :file_stats #simple hash of file stats.
                   
-    def get_data
+     def get_data
 
-        while true
+        while @exit == false
             if @go then
                 get_filelist
                 look_before_leap
                 download
                 @go = false
             else
-                sleep 1
+                sleep 1 
             end
         end
     end
