@@ -22,7 +22,6 @@
 
     threads << Thread.new {
        t_ui
-        #Tk.mainloop   #Error --> Tk.mainloop is allowed on the main thread only
     }
 
     threads.each {|thr| thr.join}
