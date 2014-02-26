@@ -73,4 +73,28 @@ class Dm
         end
     end
 end
-'''
+```
+
+After developing the dmApp prototype, new classes were written to manage JSON-to-CSV data conversions and file consolidation (10-minutes files into hourly, daily or set-size files).  
+
+It was decided to keep these as completely separate headless objects that could be marshalled by a common user-interface or instead used individually as simple scripts.  Or even launched as a Rake task from a Rails app.  
+
+To implement this a headless *process* script was written that is driven by a configuration file.  This configuration file, along with a status file, provide a primative, cross-platform mechanism for managing background tasks from the user-interface.  
+
++ On Windows, we "shell" to the dm_process.exe, built from dm_process with OCRA gem.
++ On Linux/Mac OS, we call .\ruby dm_process.rb.
+
+
+```
+def trigger_process
+    if $os == :windows then #OS #Windows
+        process_name = 'dm_process.exe' 
+    else
+        process_name = 'ruby ./dm_process.rb'
+    end
+
+    pid = spawn process_name #Launching an external process.
+    Process.detach(pid) #tell the OS we're not interested in the exit status
+end
+```
+
