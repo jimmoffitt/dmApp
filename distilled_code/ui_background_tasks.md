@@ -85,6 +85,8 @@ To implement this a headless *process* script was written that is driven by a co
 + On Linux/Mac OS, we call .\ruby dm_process.rb.
 
 
+In the user-interface code, 'launch' buttons update a configuration file and then the *process* code is triggered.  The *process* code references the configuration file and know what to do there. As the long-duration tasks are running they check for pause/stop events from the UI, via the common file. 
+
 ```
 def trigger_process
     if $os == :windows then #OS #Windows
