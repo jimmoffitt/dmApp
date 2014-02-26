@@ -20,9 +20,11 @@ Error: LoadError:cannot load such file -- tempfile
 ###Secure Socket Layer (SSL) Support
 After initial prototyping of the download process on MacOS, I immediately hit a problem with https downloading on Windows. I quickly learned that there is a fundamental issue with the standard Ruby Windows install and it knowing where to look for SSL certificate files (here and here are some example discussions of the issue).
 
+```
 OpenSSL::SSL::SSLError: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed
+```
 
-Fortunately there are many discussion threads and workaround recipes around this issue, including gems (such as this one) dedicated to solving the problem. Since a general goal was to reduce the number of dependencies for this prototype, a decision was made to look in a local directory for a certificate file, and to pull one down from a trusted source and create the file if needed. See here for a compilation of code written to implement this strategy. 
+Fortunately there are many discussion threads and workaround recipes around this issue, including gems (such as this one) dedicated to solving the problem. Since a general goal was to reduce the number of dependencies for this prototype, a decision was made to look in a local directory for a certificate file, and to pull one down from a trusted source and create the file if needed. See [HERE] (https://github.com/jimmoffitt/dmApp/blob/master/distilled_code/RubySSL_Win7.md) for a compilation of code written to implement this strategy. 
 
 ### Event Programming and Background Tasks  
 A general proof-of-concept goal was to develop a standalone application with a simple user-interface to enable users to manage long-running data processes. The user-interface needed to interact with these background processes, raising events to start them and monitoring their progress. And since it needed to run on both Windows and Mac OS/Linux, I set off to make it as simple (primitive is an appropriate description) and ‘native’ as possible. By native I mean I wanted to rely on Ruby native threads and minimize the use of ‘third-party’ gems that potentially have Windows installation issues. (This goal was driven by having attended a Rails course and witnessing the Windows students struggle to get their environments set-up.) A review of the project’s Gemfile reveals that the required gems are pretty standard for an application based on HTTP, parses JSON, manages GZipped files, and provides a Tk user-interface.  Getting both the Mac OS and Windows environments built up was easy.
@@ -35,7 +37,7 @@ t_ui = TkRoot.new.mainloop()
 threads << Thread.new { t_ui }
 ```
 
-See HERE for more details on how this simple design was implemented.
+See [HERE] (https://github.com/jimmoffitt/dmApp/blob/master/distilled_code/ui_background_tasks.md) for more details on how this simple design was implemented.
 
 
 
