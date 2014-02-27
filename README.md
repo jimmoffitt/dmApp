@@ -3,13 +3,11 @@
 
 A prototype for deploying Ruby/Tk Applications as Windows 7 Executables.
 
-
-
+This Ruby/Tk code can be run from the terminal on Mac OS/Linux with the native Ruby interpreter.
 
 This Ruby app is deployed on Windows using the Ocra gem:
 + http://ocra.rubyforge.org/
 + http://rubyonwindows.blogspot.com/2009/05/ocra-one-click-ruby-application-builder.html
-
 
 If you want to make code changes, you can re-create the Windows executable with these commands:
 Ruby\bin\ocra dmApp.rb --windows --no-autoload
