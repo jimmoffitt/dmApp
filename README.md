@@ -1,9 +1,15 @@
 #dmApp (Download Manager app) 
 
 
-A prototype for deploying Ruby/Tk Applications as Windows 7 Executables.
++ A prototype for deploying Ruby/Tk Applications as Windows 7 Executables.
++ This Ruby/Tk code can be run from the terminal on Mac OS/Linux with the native Ruby interpreter.
 
-This Ruby/Tk code can be run from the terminal on Mac OS/Linux with the native Ruby interpreter.
+To use:
+* Fill in your credentials.
+* Specify either a full HPT Data URL or a Job UUID.
+* Select  folder to store the data.
+* Specify whether you want the GZIPPED files uncompressed (can get big...).
+* Hit the 'Download Data' button.
 
 This Ruby app is deployed as a Windows executable using the OCRA gem:
 + http://ocra.rubyforge.org/
