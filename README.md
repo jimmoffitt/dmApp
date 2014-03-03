@@ -11,6 +11,8 @@ To use:
 * Specify whether you want the GZIPPED files uncompressed (can get big...).
 * Hit the 'Download Data' button.
 
+If you need to stop a download cycle, it will pick up where you left off if you leave the downloaded files in the data directory.
+
 This Ruby app is deployed as a Windows executable using the OCRA gem:
 + http://ocra.rubyforge.org/
 + http://rubyonwindows.blogspot.com/2009/05/ocra-one-click-ruby-application-builder.html
